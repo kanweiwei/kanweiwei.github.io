@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>强大的node进程管理器——PM2</title>
+    <url>/2017/03/08/%E5%BC%BA%E5%A4%A7%E7%9A%84node%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%99%A8%E2%80%94%E2%80%94PM2/</url>
+    <content><![CDATA[<blockquote>
+<p>最近，我在搭建个人博客的时候，才注意到 node 的进程管理器原来除了 forever，还有个 pm2，看了下<a href="http://pm2.keymetrics.io/docs/usage/cluster-mode/" target="_blank" rel="noopener">官方文档</a>，确实不错！</p>
+</blockquote>
+<h3 id="运行模式"><a href="#运行模式" class="headerlink" title="运行模式"></a>运行模式</h3><ol>
+<li>fork_mode</li>
+<li>cluster_mode<br><code>pm2 start app.js</code> 默认开启的是 fork 模式，<code>pm2 start app.js -i max</code> 是开启 cluster 模式（集群模式）。cluster 模式的好处，请自行百度。</li>
+</ol>
+<h3 id="pm2-可以通过配置文件启动-1-个或多个-node-应用"><a href="#pm2-可以通过配置文件启动-1-个或多个-node-应用" class="headerlink" title="pm2 可以通过配置文件启动 1 个或多个 node 应用"></a>pm2 可以通过配置文件启动 1 个或多个 node 应用</h3><figure class="highlight"><table><tr><td class="code"><pre><span class="line"><span class="comment">// process.json(也可以yml等配置文件)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"apps"</span> : [&#123;</span><br><span class="line">    <span class="attr">"name"</span>      : <span class="string">"myblog"</span>,</span><br><span class="line">    <span class="attr">"script"</span>    : <span class="string">"app.js"</span>,</span><br><span class="line">    <span class="attr">"instances"</span> : <span class="number">2</span>, <span class="comment">//利用2个核心</span></span><br><span class="line">    <span class="attr">"exec_mode"</span> : <span class="string">"cluster"</span></span><br><span class="line">  &#125;,&#123;</span><br><span class="line">    <span class="attr">"name"</span>      : <span class="string">"myblog-test"</span>,</span><br><span class="line">    <span class="attr">"script"</span>    : <span class="string">"app.js"</span>,</span><br><span class="line">    <span class="attr">"instances"</span> : <span class="string">"max"</span>,</span><br><span class="line">    <span class="attr">"exec_mode"</span> : <span class="string">"cluster"</span>,</span><br><span class="line">    <span class="attr">"watch"</span>     : <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">"env"</span>: &#123;</span><br><span class="line">      <span class="attr">"NODE_ENV"</span>: <span class="string">"development"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"env_production"</span> : &#123;</span><br><span class="line">       <span class="attr">"NODE_ENV"</span>: <span class="string">"production"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"interpreter"</span>   : <span class="string">"/usr/bin/node"</span>,</span><br><span class="line">    <span class="attr">"interpreter_args"</span>  :  <span class="string">"--harmony"</span>,</span><br><span class="line">    <span class="attr">"node_args"</span>   : <span class="string">"--harmony"</span>,</span><br><span class="line">    <span class="attr">"log_date_format"</span>   : <span class="string">"YYYY-MM-DD HH:mm Z"</span>,</span><br><span class="line">    <span class="attr">"error_file"</span>        :  <span class="string">"/web/klhut/www/logs/err.log"</span>,</span><br><span class="line">    <span class="attr">"out_file"</span>          :  <span class="string">"/web/klhut/www/logs/out.log"</span>,</span><br><span class="line">    <span class="attr">"pid_file"</span>          : <span class="string">"/web/klhut/www/logs/app-id.pid"</span></span><br><span class="line">  &#125;]</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 启动应用</span></span><br><span class="line">pm2 start process.json</span><br></pre></td></tr></table></figure>
+<p>由于我还使用了 nvm 管理 node 版本，所以我在项目目录下创建了个.nvmrc 文件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">touch .nvmrc</span><br><span class="line">echo 7 &gt; .nvmrc</span><br></pre></td></tr></table></figure>
+<p>并在 package.json 里写了几个命令</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="comment">// package.json</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"scripts"</span>: &#123;</span><br><span class="line">    <span class="attr">"start"</span>: <span class="string">"shell=(nvm use 7 ) &amp;&amp; pm2 start ./process.json"</span>,</span><br><span class="line">    <span class="attr">"restart"</span>: <span class="string">"pm2 restart ./process.json"</span>,</span><br><span class="line">    <span class="attr">"stop"</span>: <span class="string">"pm2 stop ./process.json"</span>,</span><br><span class="line">    <span class="attr">"delete"</span>: <span class="string">"npm run stop &amp;&amp; pm2 delete ./process.json"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>pm2 还可以设置开机自启动</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pm2 save</span><br><span class="line">pm2 startup centos       //我的服务器是centos 7.x的，具体看文档</span><br></pre></td></tr></table></figure>
+<p>暂时就到这里：P</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>老生常谈——图解3种跨域解决方案</title>
+    <url>/2017/10/21/%E8%80%81%E7%94%9F%E5%B8%B8%E8%B0%88%E2%80%94%E2%80%94%E5%9B%BE%E8%A7%A33%E7%A7%8D%E8%B7%A8%E5%9F%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    <content><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/4101261-aa65df33fb38d320?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+<blockquote>
+<p>没有纯前端的跨域解决方案，遇到跨域，请找后端协商方案！</p>
+</blockquote>
+<h2 id="什么是跨域？"><a href="#什么是跨域？" class="headerlink" title="什么是跨域？"></a>什么是跨域？</h2><blockquote>
+<p>同源策略限制从一个源加载的文档或脚本如何与来自另一个源的资源进行交互。这是一个用于隔离潜在恶意文件的关键的安全机制。 ——MDN</p>
+</blockquote>
+<p>跨域的产生来源于浏览器的同源策略。当你访问（请求）的资源和当前页的协议、域名、端口中有一个不同时，就会遇到跨域问题。</p>
+<p>常见的解决方案有以下 3 种。</p>
+<h3 id="1-jsonp"><a href="#1-jsonp" class="headerlink" title="1. jsonp"></a>1. jsonp</h3><blockquote>
+<p><strong>jsonp</strong> 和 <strong>XMLHttpRequest</strong> 完全没有关系。</p>
+</blockquote>
+<p>html 中的某些标签具有访问跨域资源的特性。例如，我们通过使用 <code>script</code> 标签向其他服务器请求数据，这种技术我们称为 jsonp。</p>
+<p>具体行为：创建一个 <code>script</code> 标签，给 <code>src</code> 赋值请求的 url，并添加到 <code>document</code> 中去，然后浏览器就会发送一个 <code>GET</code> 的 <strong>HTTP</strong> 请求以下载 <code>src</code> 属性所指向的 <strong>URL</strong> 。</p>
+<p>示意图:</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/4101261-90c56c0ac31b8b17?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+<p>具体代码就不贴了，如果请求超时了，会触发 <code>script</code> 标签的 <code>onerror</code> 事件，类似</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">a = new Image();</span><br><span class="line">a.src = &quot;http://www.baidu.com&quot;;</span><br><span class="line">a.onerror = function()&#123;</span><br><span class="line">    console.log(&apos;load failed&apos;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>图片资源请求失败会触发它的 <code>onerror</code>事件。</p>
+<h3 id="2-cors-跨域资源共享"><a href="#2-cors-跨域资源共享" class="headerlink" title="2. cors 跨域资源共享"></a>2. cors 跨域资源共享</h3><p>这是后端来处理的，前端不需要了解太多。主要是通过设置 <code>responseHeader</code> 的 <code>Access-Control-Allow-Origin</code> 字段</p>
+<p>这里可以参考 <a href="&quot;http://www.ruanyifeng.com/blog/2016/04/cors.html&quot;">“跨域资源共享 CORS 详解——阮一峰”</a> 。 里面讲的蛮好的, 包括什么是简单请求，什么是非简单请求，什么情况下，浏览器会先尝试发起 <code>options</code> 请求。</p>
+<p>示意图:</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/4101261-ef6da3f428fdccd6?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="CORS"></p>
+<h3 id="3-代理"><a href="#3-代理" class="headerlink" title="3. 代理"></a>3. 代理</h3><p>我这里说的代理是指 中间层代理 和 nginx 反向代理。</p>
+<p>在我的理解里, 这两个东西其实差不多，因为是服务端来处理，而服务端是没有跨域问题的。</p>
+<p>举个例子，我用一个 node 服务来做中间转发层。我在 <code>www.ccc.com/a.html</code> 中向同源的 <code>www.ccc.com/api/v1/getUserAge?id=106</code> 发起请求，node 服务接收到这个请求后，在 node 服务端向另外一个服务器比如 <code>www.aaa.com/api/v1/getUserAge?id=106</code> 发起请求，等它返回结果后，再将请求结果返回给 <code>www.ccc.com/a.html</code>。</p>
+<p>示意图：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/4101261-f32d0f525d744849?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="node转发"></p>
+<p>nginx 我没怎么用过，但应该也差不多，有个对外和对内的请求的拦截器之类的东西，在里面设置转发。</p>
+<p>就写到这里，如果有那里理解的不对，还请指正，谢谢 🙏 : )</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>assert-2020.01.01</title>
+    <url>/2020/01/01/Node%20assert/</url>
+    <content><![CDATA[<h2 id="assert-断言"><a href="#assert-断言" class="headerlink" title="assert 断言"></a>assert 断言</h2><p><code>assert</code> 模块提供了一组简单的断言测试，可用于测试不变量。 该模块提供了建议的 <strong><em>严格模式</em></strong> 和更宽松的 <strong><em>遗留模式</em></strong>。</p>
+<h2 id="assert-AssertionError-类"><a href="#assert-AssertionError-类" class="headerlink" title="assert.AssertionError 类"></a>assert.AssertionError 类</h2><p><code>Error</code> 的子类，表明断言的失败。 <code>assert</code> 模块抛出的所有错误都将是 <code>AssertionError</code> 类的实例。</p>
+<h2 id="new-assert-AssertionError-options"><a href="#new-assert-AssertionError-options" class="headerlink" title="new assert.AssertionError(options)"></a>new assert.AssertionError(options)</h2><ul>
+<li>options <code>&lt;Object&gt;</code><ul>
+<li>message <code>&lt;string&gt;</code> 如果提供，则将错误消息设置为此值。</li>
+<li>actual <code>&lt;any&gt;</code> 错误实例上的 <code>actual</code> 属性将包含此值。</li>
+<li>expected <code>&lt;any&gt;</code> 错误实例上的 <code>expected</code> 属性将包含此值。</li>
+<li>operator <code>&lt;string&gt;</code> 错误实例上的 <code>operator</code> 属性将包含此值。</li>
+<li>stackStartFn <code>&lt;Function&gt;</code> 如果提供，则生成的堆栈跟踪将移除所有帧直到提供的函数。</li>
+</ul>
+</li>
+</ul>
+<p>所有实例都包含内置的 <code>Error</code> 属性（<code>message</code> 和 <code>name</code>）以及：</p>
+<ul>
+<li>actual <code>&lt;any&gt;</code> 设置方法的 actual 参数，例如 <code>assert.strictEqual()</code>。</li>
+<li>expected <code>&lt;any&gt;</code> 设置方法的 expected 参数，例如 <code>assert.strictEqual()</code>。</li>
+<li>generatedMessage <code>&lt;boolean&gt;</code> 表明消息是否是自动生成的。</li>
+<li>code <code>&lt;string&gt;</code> 始终设置为字符串 <strong>ERR_ASSERTION</strong> 以表明错误实际上是断言错误。</li>
+<li>operator <code>&lt;string&gt;</code> 设置为传入的运算符值。</li>
+</ul>
+<h2 id="strict-严格模式"><a href="#strict-严格模式" class="headerlink" title="strict 严格模式"></a>strict 严格模式</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> assert = <span class="built_in">require</span>(<span class="string">"assert"</span>).strict;</span><br></pre></td></tr></table></figure>
+<h2 id="legacy-遗留模式"><a href="#legacy-遗留模式" class="headerlink" title="legacy 遗留模式"></a>legacy 遗留模式</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> assert = <span class="built_in">require</span>(<span class="string">"assert"</span>);</span><br></pre></td></tr></table></figure>
+<p>尽量使用 <strong><em>严格模式</em></strong>，<strong><em>遗留模式</em></strong>的 <strong>抽象的相等性比较</strong> 可能会有意外结果。<br>eg：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 注意：这不会抛出 AssertionError！</span></span><br><span class="line">assert.deepEqual(<span class="regexp">/a/gi</span>, <span class="keyword">new</span> <span class="built_in">Date</span>());</span><br></pre></td></tr></table></figure>
+<h2 id="assert-value-message"><a href="#assert-value-message" class="headerlink" title="assert(value[, message])"></a>assert(value[, message])</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">assert(<span class="literal">false</span>, <span class="string">"结果为假"</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="assert-deepStrictEqual-actual-expected-message"><a href="#assert-deepStrictEqual-actual-expected-message" class="headerlink" title="assert.deepStrictEqual(actual, expected[, message])"></a>assert.deepStrictEqual(actual, expected[, message])</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">assert.deepStrictEqual(<span class="number">1</span>, <span class="number">2</span>, <span class="string">"1和2不相等"</span>);</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>node</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux（Centos 7.x）下安装nginx</title>
+    <url>/2017/01/23/Linux%EF%BC%88Centos-7-x%EF%BC%89%E4%B8%8B%E5%AE%89%E8%A3%85nginx/</url>
+    <content><![CDATA[<h2 id="下载源码包安装-nginx"><a href="#下载源码包安装-nginx" class="headerlink" title="下载源码包安装 nginx"></a>下载源码包安装 nginx</h2><ul>
+<li>1 cd /usr/local/src</li>
+<li>2 wget <a href="http://nginx.org/download/nginx-1.10.2.tar.gz" target="_blank" rel="noopener">http://nginx.org/download/nginx-1.10.2.tar.gz</a></li>
+<li>3 tar -xzvf nginx-1.10.2.tar.gz</li>
+<li>4 cd nginx-1.10.2</li>
+<li>5 ./configure –with-file-aio –with-ipv6 –with-http_ssl_module –with-http_stub_status_module –with-http_sub_module –with-http_realip_module –with-http_dav_module –with-http_gzip_static_module –with-mail –with-mail_ssl_module –with-debug</li>
+<li>6 make &amp;&amp; make install</li>
+</ul>
+<p>默认 nginx 命令在<code>/usr/local/nginx/sbin/nginx</code>没添加到环境变量<br>可添加软连接<code>ln -s /usr/local/nginx/sbin/nginx /usr/local/bin/nginx</code></p>
+<h2 id="为-nginx-添加开机自启动服务"><a href="#为-nginx-添加开机自启动服务" class="headerlink" title="为 nginx 添加开机自启动服务"></a>为 nginx 添加开机自启动服务</h2><ul>
+<li>1 nginx -c /usr/local/nginx/conf/nginx.conf （启动 nginx）</li>
+<li>2 touch /lib/systemd/system/nginx.service (创建系统自启服务文件)</li>
+<li>3 cd /lib/systemd/system</li>
+<li>4 chmod 754 nginx.service (更改为 754 权限)</li>
+<li>5 vi nginx.service(编辑服务文件)</li>
+</ul>
+<hr>
+<p>（将以下内容写入文件内）<br>[Unit]<br>Description=nginx.service<br>After=network.target</p>
+<p>[Service]<br>Type=forking<br>PIDFile=/usr/local/nginx/logs/nginx.pid<br>ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf<br>ExecReload=/usr/local/nginx/sbin/nginx -s reload<br>ExecStop=/usr/local/nginx/sbin/nginx -s stop<br>PrivateTmp=true</p>
+<p>[Install]<br>WantedBy=multi-user.target</p>
+<hr>
+<blockquote>
+<ul>
+<li>6 systemctl enable nginx.service</li>
+</ul>
+</blockquote>
+<ul>
+<li>7 pkill -9 nginx （关闭 nginx 进程）</li>
+<li>8 systemctl start nginx.service (启动 nginx 服务)</li>
+</ul>
+<p><strong>直接访问 ip，如果出现以下页面说明成功了!</strong><br><img src="http://upload-images.jianshu.io/upload_images/4101261-387f8aaf318d7464.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="nginx"></p>
+]]></content>
+      <categories>
+        <category>后端</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从浏览器输入url开始发生了什么</title>
+    <url>/2020/06/08/%E4%BB%8E%E6%B5%8F%E8%A7%88%E5%99%A8%E8%BE%93%E5%85%A5url%E5%BC%80%E5%A7%8B%E5%8F%91%E7%94%9F%E4%BA%86%E4%BB%80%E4%B9%88/</url>
+    <content><![CDATA[<ol>
+<li>首先会触发当前页面的beforeunload事件（在这里需要的话可以使用navigator.sendBeacon()发送数据）</li>
+<li>先看本地是否缓存资源，如果缓存存在且没有过期，直接返回资源，没有则进入网络请求阶段。</li>
+<li>检查dns缓存，先从浏览器-&gt; 本机 -&gt; 本地dns服务器 -&gt; 根域服务器（顶级域服务器、以及其子域名服务器）</li>
+<li>确定了ip地址后，开始tcp的三次握手。如果是https请求，还需要建立tls连接。</li>
+<li>发起请求，强缓存和协商缓存，强缓存判断本地未过期，直接使用本地资源（cache-control expires）。协商缓存(etag/if-no-match, last-modified/if-modified-since)，向服务器端确认缓存是否过期，过期则使用新的资源。</li>
+<li>Tcp四次挥手</li>
+<li>html字节流，分词器转成html标签，构建dom，构建cssom，计算，合成布局树，布局计算，为特殊的节点分层，生成分层树，开始绘制。</li>
+<li>拆分绘制指令，生成绘制列表，交给合成线程，合成线程会图层分块，交给gpu做光栅化生成位图，结束后交给合成线程，合成图层，最后交给主线程渲染页面。</li>
+<li>渲染进程通知浏览器进程，完成整个导航。</li>
+</ol>
+]]></content>
+  </entry>
+  <entry>
+    <title>从 electron-updater 学习如何实现应用更新和发布</title>
+    <url>/2022/02/07/%E4%BB%8E-electron-updater-%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BA%94%E7%94%A8%E6%9B%B4%E6%96%B0%E5%92%8C%E5%8F%91%E5%B8%83/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近倒腾了一段时间的 electron 应用，略有收获。接下来，我主要想给大家分享的是我从 <strong>electron-updater</strong> 中学到的东西。</p>
+<h1 id="自动更新"><a href="#自动更新" class="headerlink" title="自动更新"></a>自动更新</h1><ul>
+<li>下载新安装包更新</li>
+<li>局部文件更新</li>
+</ul>
+<p>使用新安装包更新分为两种，全量更新和增量更新。在对比了 electron 官方提供的方案和开源社区提供的方案后，最终选择了 <a href="https://www.npmjs.com/package/electron-updater" target="_blank" rel="noopener">electron-updater</a>。<strong>electron-updater</strong> 同时支持全量更新和增量更新。</p>
+<p>不管是全量更新，还是增量更新，基本流程都是下载新的安装包等待重新安装，只不过后者只需要下载部分数据就能形成一个新的安装包。</p>
+<p>除了这种方式，还有一种就是局部文件更新。我们知道，通常 electron 应用需要更新的部分都集中在 <strong>app.asar</strong> 这个文件中，有的时候可能是在 <strong>app.asar.unpacked</strong> 中。</p>
+<p>有些同学可能没接触过 app.asar.unpacked，这个是使用 asarUnpack 特性后生成的目录，所有指定不需要打包到 app.asar 压缩文件的文件都会存储在这个目录中。electron 应用在启动时，会先把这个目录中的文件拷贝到 app.asar 中，然后才真正启动。社区里有  <strong><a href="https://github.com/yansenlei/electron-asar-hot-updater" target="_blank" rel="noopener">electron-asar-hot-updater</a></strong> ，大体工作流程是检测是否有新版本的 app.asar 压缩文件，有的话就下载覆盖应用安装目录里的 app.asar，然后重新启动。</p>
+<h2 id="全量更新"><a href="#全量更新" class="headerlink" title="全量更新"></a>全量更新</h2><p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d57b7f766d4f4653a3150516d440a2ac~tplv-k3u1fbpfcp-watermark.image?" alt="全量更新.png"></p>
+<center><div>图1</div></center>
+
+<p>全量更新的大体逻辑就是 <strong>图1</strong> 所示。在打包成安装程序时，就一并生成 update.yml 文件。</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5085355891f04b0cb28e9cd5977e7173~tplv-k3u1fbpfcp-watermark.image?" alt="image.png"></p>
+<center>图2</center>
+
+<p>如 <strong>图2</strong> 所示，<em>update.yml</em> 记录着一些新版本安装程序的信息，其中最重要的三个字段是 <strong>version</strong>、<strong>path</strong> 和 <strong>sha512</strong>。<em>.yml</em> 文件是很常见的文件格式，我们可以使用 <a href="https://www.npmjs.com/package/js-yaml" target="_blank" rel="noopener">js-yaml</a> 可以用来解析 <a href="https://baike.baidu.com/item/YAML/1067697?fr=aladdin" target="_blank" rel="noopener">yaml</a> 文件。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> yaml = <span class="built_in">require</span>(<span class="string">'js-yaml'</span>);</span><br><span class="line"><span class="keyword">const</span> fs   = <span class="built_in">require</span>(<span class="string">'fs'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Get document, or throw exception on error</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> doc = yaml.load(fs.readFileSync(<span class="string">'/home/ixti/example.yml'</span>, <span class="string">'utf8'</span>));</span><br><span class="line">  <span class="built_in">console</span>.log(doc);</span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><em>update.yml</em> 和新安装程序一起上传到服务器上，之后就可以按照 <strong>图1</strong> 的逻辑来处理。在对比远程最新版号和本地版本号时，可以使用 <a href="https://www.npmjs.com/package/semver" target="_blank" rel="noopener">semver</a> 。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> semver = <span class="built_in">require</span>(<span class="string">'semver'</span>)</span><br><span class="line"></span><br><span class="line">semver.valid(<span class="string">'1.2.3'</span>) <span class="comment">// '1.2.3'</span></span><br><span class="line">semver.valid(<span class="string">'a.b.c'</span>) <span class="comment">// null</span></span><br><span class="line">semver.clean(<span class="string">'  =v1.2.3   '</span>) <span class="comment">// '1.2.3'</span></span><br><span class="line">semver.satisfies(<span class="string">'1.2.3'</span>, <span class="string">'1.x || &gt;=2.5.0 || 5.0.0 - 7.2.3'</span>) <span class="comment">// true</span></span><br><span class="line">semver.gt(<span class="string">'1.2.3'</span>, <span class="string">'9.8.7'</span>) <span class="comment">// false</span></span><br><span class="line">semver.lt(<span class="string">'1.2.3'</span>, <span class="string">'9.8.7'</span>) <span class="comment">// true</span></span><br><span class="line">semver.minVersion(<span class="string">'&gt;=1.0.0'</span>) <span class="comment">// '1.0.0'</span></span><br><span class="line">semver.valid(semver.coerce(<span class="string">'v2'</span>)) <span class="comment">// '2.0.0'</span></span><br><span class="line">semver.valid(semver.coerce(<span class="string">'42.6.7.9.3-alpha'</span>)) <span class="comment">// '42.6.7'</span></span><br></pre></td></tr></table></figure>
+<h2 id="增量更新"><a href="#增量更新" class="headerlink" title="增量更新"></a>增量更新</h2><p>增量更新是指只需要请求部分数据就可以实现版本更新，下面我只讲 <em>electron-updater</em> 中采用的增量更新方案。</p>
+<p><em>electron-updater</em> 采用的是基于内容可变长度分块（<em>Content-Defined Chunking</em>, <em>CDC</em>）的的软件增量更新方式，这种方式解决了其他增量更新中不相邻版本需要单独打patch的问题，同时仅需要下载部分文件内容就可以生成新版本的安装包。</p>
+<h3 id="内容可变长度分块——CDC"><a href="#内容可变长度分块——CDC" class="headerlink" title="内容可变长度分块——CDC"></a>内容可变长度分块——CDC</h3><p>内容分块采用滑动窗口技术对文件进行分块，其核心操作是确定每个窗口的边界，它应用数据指纹如 <strong>Rabin</strong> 指纹算法将文件分割成长度大小不等的内容块。在算法执行过程中，CDC 使用一个固定大小的滑动窗口对文件数据计算数据指纹。</p>
+<p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a867ef4c67fb4d8fba6cd4f8d961ecbb~tplv-k3u1fbpfcp-watermark.image?" alt="image.png"></p>
+<center>图3</center>
+
+<p>如 <strong>图3</strong> 所示，一般来说会有相应程序使用指纹算法将安装程序分割成长度不等的数据块，然后计算不同数据块的 <strong>hash</strong> 值和 <strong>size</strong>，并将其记录到一个 <strong>blockmap</strong> 文件中。因此每个版本的安装程序都有对应的 <em>blockmap</em> 文件。之后只需要对比两个版本的 <em>blockmap</em> 文件，计算出哪些数据块不同，然后使用分段请求（<em>range：bytes=x-y</em>）请求最新安装程序的这部分数据，写入到旧安装程序就可以生成新的安装程序。</p>
+<p><em>electron-updater</em> 的更新是使用 <a href="https://www.npmjs.com/package/app-builder-bin" target="_blank" rel="noopener">app-builder-bin</a>  编译生成 <em>blockmap</em> 文件。该 <em>blockmap</em> 文件使用了 <strong>gzip</strong> 压缩，实际文件内容如下所示。<br><figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"version"</span>: <span class="string">"2"</span>,</span><br><span class="line">    <span class="attr">"files"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"name"</span>: <span class="string">"file"</span>,</span><br><span class="line">            <span class="attr">"offset"</span>: <span class="number">0</span>,</span><br><span class="line">            <span class="attr">"checksums"</span>: [</span><br><span class="line">                <span class="string">"VxFZSGxhDYz5FXgMiOUk5oCc"</span></span><br><span class="line">            ],</span><br><span class="line">            <span class="attr">"sizes"</span>: [</span><br><span class="line">                <span class="number">32768</span></span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="局部更新"><a href="#局部更新" class="headerlink" title="局部更新"></a>局部更新</h2><p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/66ca0d35f506498395f7f944a7a82671~tplv-k3u1fbpfcp-watermark.image?" alt="局部文件更新.png"></p>
+<center>图4</center>
+
+<p>如 <strong>图4</strong> 所示，局部文件更新的逻辑相比全量更新就比较简单了。这里，<em>electron-asar-hot-update</em> 网络请求没有使用 <em>electron</em> 提供的 <em>net</em> api，而是使用了 <em>request</em> 这个库。</p>
+<p>需要注意的一点是，在 <em>windows</em> 环境中替换 <em>app.asar</em> 时，如果直接在应用的主进程中通过 <em>nodejs</em> 去替换，会因为文件占用而报错，因为主进程的代码也是在 <em>app.asar</em> 中的。所以这个库单独写了个 <em>update.exe</em> 程序，调用该程序异步处理这个文件的替换。</p>
+<p>ps： 类 <em>Unix</em> 的系统，通常不存在文件占用的问题，你可以试着在 mac 系统下写个 nodejs 脚本，让它自己删除自己，看是否会报错。</p>
+<h1 id="灰度发布"><a href="#灰度发布" class="headerlink" title="灰度发布"></a>灰度发布</h1><p>全量、增量、局部，3种类型的更新基本都讲到了，处理完更新，我们就可以发布应用了。</p>
+<p>等等！发布应用是直接就把应用程序安装包的下载链接放到官网上么？当然不是。首次安装我们当然希望所有用户都能使用上我们的应用，但是过了一段时间，我们又新增了一个功能，又该如何发布这个新版本？</p>
+<p>先回答这个问题再讲原因。我们肯定不是直通过之前讲的更新逻辑直接将旧版本更新到最新版本。虽然，新版本经过了内部的各种测试，内部觉得已经很稳定了，但是发布给用户还是要谨慎对待的。我们希望一部分用户可以先使用到新版本，收集一些意见反馈，及时修复一些未被发现的 bug，再逐步扩大体验新版本的用户范围。这就是灰度发布。</p>
+<blockquote>
+<p>灰度发布（又名<strong>金丝雀发布</strong>）是指在黑与白之间，能够平滑过渡的一种发布方式。在其上可以进行A/B testing，即让一部分用户继续用产品特性A，一部分用户开始用产品特性B，如果用户对B没有什么反对意见，那么逐步扩大范围，把所有用户都迁移到B上面来。灰度发布可以保证整体系统的稳定，在初始灰度的时候就可以发现、调整问题，以保证其影响度。</p>
+</blockquote>
+<p>这是<em>百度百科</em>上对灰度发布的解释。</p>
+<p>如 <strong>图5</strong> 所示，这里面关键的地方在于首先要生成一个不变的 <strong>guid</strong>，然后对这个 <em>guid</em> 进行哈希，取得 <em>hashCode</em> 后对 100 取模得到一个 0-100 的数字，根据灰度发布的进度来确定当前应用是否需要更新到新版本。</p>
+<p><a href="https://www.npmjs.com/package/electron-updater" target="_blank" rel="noopener">electron-updater</a> 本身也包含了灰度发布的逻辑。它会生成一个不变的 <strong>stagingUserId</strong> 写到本地文件中，作为唯一 <em>id</em>，然后计算出一个 0-100 的数字后，和服务器上的 <em>update.yml</em> 中的 <strong>stagingPercentage</strong> 字段对比来确定是否要更新新版本。</p>
+<p>至于如何推进灰度发布，大家可以有自己的实现。</p>
+<h1 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h1><p>春节期间断断续续写了几天才完成的，希望这篇总结对大家实际开发 electron 应用有帮助，感谢大家的阅读～</p>
+]]></content>
+  </entry>
+</search>

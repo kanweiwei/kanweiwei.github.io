@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="前言最近倒腾了一段时间的 electron 应用，略有收获。接下来，我主要想给大家分享的是我从 electron-updater 中学到的东西。 自动更新 下载新安装包更新 局部文件更新  使用新安装包更新分为两种，全量更新和增量更新。在对比了 electron 官方提供的方案和开源社区提供的方案后，最终选择了 electron-updater。electron-updater 同时支持全量更新和">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从 electron-updater 学习如何实现应用更新和发布">
+<meta property="og:url" content="http://kanweiwei.github.io/2022/02/07/从-electron-updater-学习如何实现应用更新和发布/index.html">
+<meta property="og:site_name" content="Coding">
+<meta property="og:description" content="前言最近倒腾了一段时间的 electron 应用，略有收获。接下来，我主要想给大家分享的是我从 electron-updater 中学到的东西。 自动更新 下载新安装包更新 局部文件更新  使用新安装包更新分为两种，全量更新和增量更新。在对比了 electron 官方提供的方案和开源社区提供的方案后，最终选择了 electron-updater。electron-updater 同时支持全量更新和">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d57b7f766d4f4653a3150516d440a2ac~tplv-k3u1fbpfcp-watermark.image?">
+<meta property="og:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5085355891f04b0cb28e9cd5977e7173~tplv-k3u1fbpfcp-watermark.image?">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a867ef4c67fb4d8fba6cd4f8d961ecbb~tplv-k3u1fbpfcp-watermark.image?">
+<meta property="og:image" content="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/66ca0d35f506498395f7f944a7a82671~tplv-k3u1fbpfcp-watermark.image?">
+<meta property="og:updated_time" content="2022-02-07T01:36:00.044Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从 electron-updater 学习如何实现应用更新和发布">
+<meta name="twitter:description" content="前言最近倒腾了一段时间的 electron 应用，略有收获。接下来，我主要想给大家分享的是我从 electron-updater 中学到的东西。 自动更新 下载新安装包更新 局部文件更新  使用新安装包更新分为两种，全量更新和增量更新。在对比了 electron 官方提供的方案和开源社区提供的方案后，最终选择了 electron-updater。electron-updater 同时支持全量更新和">
+<meta name="twitter:image" content="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d57b7f766d4f4653a3150516d440a2ac~tplv-k3u1fbpfcp-watermark.image?">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kanweiwei.github.io/2022/02/07/从-electron-updater-学习如何实现应用更新和发布/">
+
+
+
+
+
+  <title>从 electron-updater 学习如何实现应用更新和发布 | Coding</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Coding</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://kanweiwei.github.io/2022/02/07/从-electron-updater-学习如何实现应用更新和发布/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Camol(kanweiwei)">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Coding">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从 electron-updater 学习如何实现应用更新和发布</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2022-02-07T00:16:23+08:00">
+                2022-02-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近倒腾了一段时间的 electron 应用，略有收获。接下来，我主要想给大家分享的是我从 <strong>electron-updater</strong> 中学到的东西。</p>
+<h1 id="自动更新"><a href="#自动更新" class="headerlink" title="自动更新"></a>自动更新</h1><ul>
+<li>下载新安装包更新</li>
+<li>局部文件更新</li>
+</ul>
+<p>使用新安装包更新分为两种，全量更新和增量更新。在对比了 electron 官方提供的方案和开源社区提供的方案后，最终选择了 <a href="https://www.npmjs.com/package/electron-updater" target="_blank" rel="noopener">electron-updater</a>。<strong>electron-updater</strong> 同时支持全量更新和增量更新。</p>
+<p>不管是全量更新，还是增量更新，基本流程都是下载新的安装包等待重新安装，只不过后者只需要下载部分数据就能形成一个新的安装包。</p>
+<p>除了这种方式，还有一种就是局部文件更新。我们知道，通常 electron 应用需要更新的部分都集中在 <strong>app.asar</strong> 这个文件中，有的时候可能是在 <strong>app.asar.unpacked</strong> 中。</p>
+<p>有些同学可能没接触过 app.asar.unpacked，这个是使用 asarUnpack 特性后生成的目录，所有指定不需要打包到 app.asar 压缩文件的文件都会存储在这个目录中。electron 应用在启动时，会先把这个目录中的文件拷贝到 app.asar 中，然后才真正启动。社区里有  <strong><a href="https://github.com/yansenlei/electron-asar-hot-updater" target="_blank" rel="noopener">electron-asar-hot-updater</a></strong> ，大体工作流程是检测是否有新版本的 app.asar 压缩文件，有的话就下载覆盖应用安装目录里的 app.asar，然后重新启动。</p>
+<h2 id="全量更新"><a href="#全量更新" class="headerlink" title="全量更新"></a>全量更新</h2><p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d57b7f766d4f4653a3150516d440a2ac~tplv-k3u1fbpfcp-watermark.image?" alt="全量更新.png"></p>
+<center><div>图1</div></center>
+
+<p>全量更新的大体逻辑就是 <strong>图1</strong> 所示。在打包成安装程序时，就一并生成 update.yml 文件。</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5085355891f04b0cb28e9cd5977e7173~tplv-k3u1fbpfcp-watermark.image?" alt="image.png"></p>
+<center>图2</center>
+
+<p>如 <strong>图2</strong> 所示，<em>update.yml</em> 记录着一些新版本安装程序的信息，其中最重要的三个字段是 <strong>version</strong>、<strong>path</strong> 和 <strong>sha512</strong>。<em>.yml</em> 文件是很常见的文件格式，我们可以使用 <a href="https://www.npmjs.com/package/js-yaml" target="_blank" rel="noopener">js-yaml</a> 可以用来解析 <a href="https://baike.baidu.com/item/YAML/1067697?fr=aladdin" target="_blank" rel="noopener">yaml</a> 文件。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> yaml = <span class="built_in">require</span>(<span class="string">'js-yaml'</span>);</span><br><span class="line"><span class="keyword">const</span> fs   = <span class="built_in">require</span>(<span class="string">'fs'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Get document, or throw exception on error</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> doc = yaml.load(fs.readFileSync(<span class="string">'/home/ixti/example.yml'</span>, <span class="string">'utf8'</span>));</span><br><span class="line">  <span class="built_in">console</span>.log(doc);</span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><em>update.yml</em> 和新安装程序一起上传到服务器上，之后就可以按照 <strong>图1</strong> 的逻辑来处理。在对比远程最新版号和本地版本号时，可以使用 <a href="https://www.npmjs.com/package/semver" target="_blank" rel="noopener">semver</a> 。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> semver = <span class="built_in">require</span>(<span class="string">'semver'</span>)</span><br><span class="line"></span><br><span class="line">semver.valid(<span class="string">'1.2.3'</span>) <span class="comment">// '1.2.3'</span></span><br><span class="line">semver.valid(<span class="string">'a.b.c'</span>) <span class="comment">// null</span></span><br><span class="line">semver.clean(<span class="string">'  =v1.2.3   '</span>) <span class="comment">// '1.2.3'</span></span><br><span class="line">semver.satisfies(<span class="string">'1.2.3'</span>, <span class="string">'1.x || &gt;=2.5.0 || 5.0.0 - 7.2.3'</span>) <span class="comment">// true</span></span><br><span class="line">semver.gt(<span class="string">'1.2.3'</span>, <span class="string">'9.8.7'</span>) <span class="comment">// false</span></span><br><span class="line">semver.lt(<span class="string">'1.2.3'</span>, <span class="string">'9.8.7'</span>) <span class="comment">// true</span></span><br><span class="line">semver.minVersion(<span class="string">'&gt;=1.0.0'</span>) <span class="comment">// '1.0.0'</span></span><br><span class="line">semver.valid(semver.coerce(<span class="string">'v2'</span>)) <span class="comment">// '2.0.0'</span></span><br><span class="line">semver.valid(semver.coerce(<span class="string">'42.6.7.9.3-alpha'</span>)) <span class="comment">// '42.6.7'</span></span><br></pre></td></tr></table></figure>
+<h2 id="增量更新"><a href="#增量更新" class="headerlink" title="增量更新"></a>增量更新</h2><p>增量更新是指只需要请求部分数据就可以实现版本更新，下面我只讲 <em>electron-updater</em> 中采用的增量更新方案。</p>
+<p><em>electron-updater</em> 采用的是基于内容可变长度分块（<em>Content-Defined Chunking</em>, <em>CDC</em>）的的软件增量更新方式，这种方式解决了其他增量更新中不相邻版本需要单独打patch的问题，同时仅需要下载部分文件内容就可以生成新版本的安装包。</p>
+<h3 id="内容可变长度分块——CDC"><a href="#内容可变长度分块——CDC" class="headerlink" title="内容可变长度分块——CDC"></a>内容可变长度分块——CDC</h3><p>内容分块采用滑动窗口技术对文件进行分块，其核心操作是确定每个窗口的边界，它应用数据指纹如 <strong>Rabin</strong> 指纹算法将文件分割成长度大小不等的内容块。在算法执行过程中，CDC 使用一个固定大小的滑动窗口对文件数据计算数据指纹。</p>
+<p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a867ef4c67fb4d8fba6cd4f8d961ecbb~tplv-k3u1fbpfcp-watermark.image?" alt="image.png"></p>
+<center>图3</center>
+
+<p>如 <strong>图3</strong> 所示，一般来说会有相应程序使用指纹算法将安装程序分割成长度不等的数据块，然后计算不同数据块的 <strong>hash</strong> 值和 <strong>size</strong>，并将其记录到一个 <strong>blockmap</strong> 文件中。因此每个版本的安装程序都有对应的 <em>blockmap</em> 文件。之后只需要对比两个版本的 <em>blockmap</em> 文件，计算出哪些数据块不同，然后使用分段请求（<em>range：bytes=x-y</em>）请求最新安装程序的这部分数据，写入到旧安装程序就可以生成新的安装程序。</p>
+<p><em>electron-updater</em> 的更新是使用 <a href="https://www.npmjs.com/package/app-builder-bin" target="_blank" rel="noopener">app-builder-bin</a>  编译生成 <em>blockmap</em> 文件。该 <em>blockmap</em> 文件使用了 <strong>gzip</strong> 压缩，实际文件内容如下所示。<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"version"</span>: <span class="string">"2"</span>,</span><br><span class="line">    <span class="attr">"files"</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"name"</span>: <span class="string">"file"</span>,</span><br><span class="line">            <span class="attr">"offset"</span>: <span class="number">0</span>,</span><br><span class="line">            <span class="attr">"checksums"</span>: [</span><br><span class="line">                <span class="string">"VxFZSGxhDYz5FXgMiOUk5oCc"</span></span><br><span class="line">            ],</span><br><span class="line">            <span class="attr">"sizes"</span>: [</span><br><span class="line">                <span class="number">32768</span></span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="局部更新"><a href="#局部更新" class="headerlink" title="局部更新"></a>局部更新</h2><p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/66ca0d35f506498395f7f944a7a82671~tplv-k3u1fbpfcp-watermark.image?" alt="局部文件更新.png"></p>
+<center>图4</center>
+
+<p>如 <strong>图4</strong> 所示，局部文件更新的逻辑相比全量更新就比较简单了。这里，<em>electron-asar-hot-update</em> 网络请求没有使用 <em>electron</em> 提供的 <em>net</em> api，而是使用了 <em>request</em> 这个库。</p>
+<p>需要注意的一点是，在 <em>windows</em> 环境中替换 <em>app.asar</em> 时，如果直接在应用的主进程中通过 <em>nodejs</em> 去替换，会因为文件占用而报错，因为主进程的代码也是在 <em>app.asar</em> 中的。所以这个库单独写了个 <em>update.exe</em> 程序，调用该程序异步处理这个文件的替换。</p>
+<p>ps： 类 <em>Unix</em> 的系统，通常不存在文件占用的问题，你可以试着在 mac 系统下写个 nodejs 脚本，让它自己删除自己，看是否会报错。</p>
+<h1 id="灰度发布"><a href="#灰度发布" class="headerlink" title="灰度发布"></a>灰度发布</h1><p>全量、增量、局部，3种类型的更新基本都讲到了，处理完更新，我们就可以发布应用了。</p>
+<p>等等！发布应用是直接就把应用程序安装包的下载链接放到官网上么？当然不是。首次安装我们当然希望所有用户都能使用上我们的应用，但是过了一段时间，我们又新增了一个功能，又该如何发布这个新版本？</p>
+<p>先回答这个问题再讲原因。我们肯定不是直通过之前讲的更新逻辑直接将旧版本更新到最新版本。虽然，新版本经过了内部的各种测试，内部觉得已经很稳定了，但是发布给用户还是要谨慎对待的。我们希望一部分用户可以先使用到新版本，收集一些意见反馈，及时修复一些未被发现的 bug，再逐步扩大体验新版本的用户范围。这就是灰度发布。</p>
+<blockquote>
+<p>灰度发布（又名<strong>金丝雀发布</strong>）是指在黑与白之间，能够平滑过渡的一种发布方式。在其上可以进行A/B testing，即让一部分用户继续用产品特性A，一部分用户开始用产品特性B，如果用户对B没有什么反对意见，那么逐步扩大范围，把所有用户都迁移到B上面来。灰度发布可以保证整体系统的稳定，在初始灰度的时候就可以发现、调整问题，以保证其影响度。</p>
+</blockquote>
+<p>这是<em>百度百科</em>上对灰度发布的解释。</p>
+<p>如 <strong>图5</strong> 所示，这里面关键的地方在于首先要生成一个不变的 <strong>guid</strong>，然后对这个 <em>guid</em> 进行哈希，取得 <em>hashCode</em> 后对 100 取模得到一个 0-100 的数字，根据灰度发布的进度来确定当前应用是否需要更新到新版本。</p>
+<p><a href="https://www.npmjs.com/package/electron-updater" target="_blank" rel="noopener">electron-updater</a> 本身也包含了灰度发布的逻辑。它会生成一个不变的 <strong>stagingUserId</strong> 写到本地文件中，作为唯一 <em>id</em>，然后计算出一个 0-100 的数字后，和服务器上的 <em>update.yml</em> 中的 <strong>stagingPercentage</strong> 字段对比来确定是否要更新新版本。</p>
+<p>至于如何推进灰度发布，大家可以有自己的实现。</p>
+<h1 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h1><p>春节期间断断续续写了几天才完成的，希望这篇总结对大家实际开发 electron 应用有帮助，感谢大家的阅读～</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/08/从浏览器输入url开始发生了什么/" rel="next" title="从浏览器输入url开始发生了什么">
+                <i class="fa fa-chevron-left"></i> 从浏览器输入url开始发生了什么
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Camol(kanweiwei)">
+          <p class="site-author-name" itemprop="name">Camol(kanweiwei)</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kanweiwei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自动更新"><span class="nav-number">2.</span> <span class="nav-text">自动更新</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#全量更新"><span class="nav-number">2.1.</span> <span class="nav-text">全量更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#增量更新"><span class="nav-number">2.2.</span> <span class="nav-text">增量更新</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内容可变长度分块——CDC"><span class="nav-number">2.2.1.</span> <span class="nav-text">内容可变长度分块——CDC</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#局部更新"><span class="nav-number">2.3.</span> <span class="nav-text">局部更新</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#灰度发布"><span class="nav-number">3.</span> <span class="nav-text">灰度发布</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结束语"><span class="nav-number">4.</span> <span class="nav-text">结束语</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Camol(kanweiwei)</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Gemini
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
